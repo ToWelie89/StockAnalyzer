@@ -46,6 +46,10 @@ async function startScraping() {
     headless: true,
     timeout: 0,
     defaultViewport: null,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox'
+    ]
   });
   const page = await browser.newPage({ timeout: 500 });
 
