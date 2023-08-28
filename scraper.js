@@ -157,13 +157,10 @@ async function startScraping() {
 }
 
 // Main function
-const run = (what = undefined, pages = undefined) => {
-  //const parameters = getParamters();
+const run = async () => {
   console.log(`Starting scraping script...`);
-  startScraping();
+  await startScraping();
 }
-
-run();
 
 module.exports = {
   run
