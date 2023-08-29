@@ -4,7 +4,8 @@
   "description": "Scraper",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "heroku-postbuild": "bash balle.bash"
   },
   "author": "demilio",
   "license": "ISC",
