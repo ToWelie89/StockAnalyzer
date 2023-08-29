@@ -5,6 +5,10 @@ const { run } = require('./scraper.js');
 
 const PORT = process.env.PORT || 4000;
 
+app.get('/ping', async (req, res) => {
+    res.send('pinged!!');
+});
+
 app.get('/scrape', async (req, res) => {
     await run();
 });
