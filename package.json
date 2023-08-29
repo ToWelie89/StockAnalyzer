@@ -4,8 +4,7 @@
   "description": "Scraper",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "heroku-postbuild": "mkdir ./.cache && mv /app/.cache/puppeteer ./.cache"
+    "start": "node server.js"
   },
   "author": "demilio",
   "license": "ISC",
