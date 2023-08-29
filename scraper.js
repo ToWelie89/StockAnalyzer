@@ -41,11 +41,12 @@ const round = (number, numberOfDecimals) => {
 
 async function startScraping() {
   let result = [];
+  let browser;
   
   try {
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
       headless: true,
-      timeout: 5000,
+      timeout: 10000,
       defaultViewport: null,
       args: [
         "--disable-setuid-sandbox",
@@ -58,16 +59,16 @@ async function startScraping() {
           ? process.env.PUPPETEER_EXECUTABLE_PATH
           : puppeteer.executablePath()
     });
-    const page = await browser.newPage({ timeout: 5000 });
+    const page = await browser.newPage({ timeout: 8000 });
 
     for (let i = 0; i < stocksToCheck.length; i++) {
       console.log(`Scraping data for stock number ${i + 1}`);
       const stock = stocksToCheck[i];
       await page.goto(stock.avanzaUrl, {
-        timeout: process.env.NODE_ENV === "production" ? 20000 : 1000,
+        timeout: 20000,
         waitUntil: "networkidle2",
       });
-      await delay(process.env.NODE_ENV === "production" ? 2000 : 500);
+      await delay(2000);
       await page.waitForSelector(".app-container");
 
       const values = [];
