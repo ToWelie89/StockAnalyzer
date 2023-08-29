@@ -11,23 +11,23 @@ const stocksToCheck = [
     ]
   }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/399875/microstrategy-a'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/794954/riot-platforms'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/804473/marathon-digital'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/1300923/bitfarms'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/1247224/hut-8-mining'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/3323/apple'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/3873/microsoft'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/4478/nvidia'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/238449/tesla'
-  },  {
+  }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/5364/hennes---mauritz-b'
   }
 ];
@@ -47,9 +47,15 @@ async function startScraping() {
     timeout: 0,
     defaultViewport: null,
     args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox'
-    ]
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      "--single-process",
+      "--no-zygote",
+    ],
+    executablePath:
+      process.env.NODE_ENV === "production"
+        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        : puppeteer.executablePath()
   });
   const page = await browser.newPage({ timeout: 500 });
 
@@ -130,7 +136,7 @@ async function startScraping() {
         item.totalCurrentWorth = totalCurrentWorth;
 
         item.profitEarnedSEK = round(totalCurrentWorth - totalMoneySpent, 2);
-        
+
         const percentageDiff = totalCurrentWorth / totalMoneySpent;
         let diffPercent;
 
