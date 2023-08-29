@@ -41,25 +41,25 @@ const round = (number, numberOfDecimals) => {
 
 async function startScraping() {
   let result = [];
-
-  const browser = await puppeteer.launch({
-    headless: true,
-    timeout: 0,
-    defaultViewport: null,
-    args: [
-      "--disable-setuid-sandbox",
-      "--no-sandbox",
-      "--single-process",
-      "--no-zygote",
-    ],
-    executablePath:
-      process.env.NODE_ENV === "production"
-        ? process.env.PUPPETEER_EXECUTABLE_PATH
-        : puppeteer.executablePath()
-  });
-  const page = await browser.newPage({ timeout: 500 });
-
+  
   try {
+    const browser = await puppeteer.launch({
+      headless: true,
+      timeout: 5000,
+      defaultViewport: null,
+      args: [
+        "--disable-setuid-sandbox",
+        "--no-sandbox",
+        "--single-process",
+        "--no-zygote",
+      ],
+      executablePath:
+        process.env.NODE_ENV === "production"
+          ? process.env.PUPPETEER_EXECUTABLE_PATH
+          : puppeteer.executablePath()
+    });
+    const page = await browser.newPage({ timeout: 5000 });
+
     for (let i = 0; i < stocksToCheck.length; i++) {
       console.log(`Scraping data for stock number ${i + 1}`);
       const stock = stocksToCheck[i];
@@ -67,7 +67,7 @@ async function startScraping() {
         timeout: 5000,
         waitUntil: "networkidle2",
       });
-      await delay(500);
+      await delay(process.env.NODE_ENV === "production" ? 2000 : 500);
       await page.waitForSelector(".app-container");
 
       const values = [];
@@ -88,7 +88,7 @@ async function startScraping() {
             values.push(value);
           }
         } catch (e) {
-          //console.error(e);
+          console.error(e);
         }
       }
       const name = await page.$eval(
@@ -148,18 +148,22 @@ async function startScraping() {
         diffPercent = round(diffPercent, 2);
         item.diffPercent = diffPercent;
       }
+
       item.ownsStock = stock.transactionCosts && stock.transactionCosts.length > 0;
       item.amount = stock.transactionCosts ? stock.transactionCosts.length : 0;
+
+      console.log(item);
 
       result.push(item);
     }
     console.log(result);
   } catch (e) {
     console.error(e);
+  } finally {
+    await delay(process.env.NODE_ENV === "production" ? 2000 : 300);
+    await browser.close();
+    await sendMail(result);
   }
-  //await delay(3000000);
-  await browser.close();
-  await sendMail(result);
 }
 
 // Main function
