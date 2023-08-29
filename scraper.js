@@ -11,7 +11,7 @@ const stocksToCheck = [
     ]
   }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/399875/microstrategy-a'
-  }, {
+  }/* , {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/794954/riot-platforms'
   }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/804473/marathon-digital'
@@ -29,7 +29,7 @@ const stocksToCheck = [
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/238449/tesla'
   }, {
     avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/5364/hennes---mauritz-b'
-  }
+  } */
 ];
 
 const round = (number, numberOfDecimals) => {
