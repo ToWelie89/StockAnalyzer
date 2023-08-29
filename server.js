@@ -10,6 +10,7 @@ app.get('/ping', async (req, res) => {
 });
 
 app.get('/scrape', async (req, res) => {
+    res.send('started scraping');
     await run();
 });
 

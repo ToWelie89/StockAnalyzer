@@ -162,7 +162,7 @@ async function startScraping() {
   } catch (e) {
     console.error(e);
   } finally {
-    await delay(process.env.NODE_ENV === "production" ? 2000 : 300);
+    await delay(process.env.NODE_ENV === 'production' ? 2000 : 300);
     await browser.close();
     await sendMail(result);
   }
