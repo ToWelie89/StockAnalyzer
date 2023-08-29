@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer");
+require('dotenv').config();
 
 const { sendMail } = require('./mailer.js');
 const { delay } = require('./helpers.js');
@@ -169,6 +170,9 @@ async function startScraping() {
 
 // Main function
 const run = async () => {
+  console.log('process.env');
+  console.log(process.env);
+
   console.log(`Starting scraping script...`);
   await startScraping();
 }
