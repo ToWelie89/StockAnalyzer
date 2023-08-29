@@ -64,7 +64,7 @@ async function startScraping() {
       console.log(`Scraping data for stock number ${i + 1}`);
       const stock = stocksToCheck[i];
       await page.goto(stock.avanzaUrl, {
-        timeout: 5000,
+        timeout: process.env.NODE_ENV === "production" ? 20000 : 1000,
         waitUntil: "networkidle2",
       });
       await delay(process.env.NODE_ENV === "production" ? 2000 : 500);
