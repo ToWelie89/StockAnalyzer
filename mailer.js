@@ -161,9 +161,6 @@ const generateTable = stocks => {
 
 const sendMail = (mailData) =>
     new Promise((resolve, reject) => {
-        console.log('process.env');
-        console.log(process.env);
-
         const transporter = nodemailer.createTransport({
           service: 'hotmail',
           secure: false,

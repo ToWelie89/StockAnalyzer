@@ -3,35 +3,7 @@ require('dotenv').config();
 
 const { sendMail } = require('./mailer.js');
 const { delay } = require('./helpers.js');
-
-const stocksToCheck = [
-  {
-    avanzaUrl: 'https://www.avanza.se/borshandlade-produkter/certifikat-torg/om-certifikatet.html/563966/bitcoin-xbt',
-    transactionCosts: [
-      1296.49
-    ]
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/399875/microstrategy-a'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/794954/riot-platforms'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/804473/marathon-digital'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/1300923/bitfarms'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/1247224/hut-8-mining'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/3323/apple'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/3873/microsoft'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/4478/nvidia'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/238449/tesla'
-  }, {
-    avanzaUrl: 'https://www.avanza.se/aktier/om-aktien.html/5364/hennes---mauritz-b'
-  }
-];
+const { stocks } = require('./stocks.js');
 
 const round = (number, numberOfDecimals) => {
   number = number * Math.pow(10, numberOfDecimals);
@@ -62,9 +34,9 @@ async function startScraping() {
     });
     const page = await browser.newPage({ timeout: 8000 });
 
-    for (let i = 0; i < stocksToCheck.length; i++) {
+    for (let i = 0; i < stocks.length; i++) {
       console.log(`Scraping data for stock number ${i + 1}`);
-      const stock = stocksToCheck[i];
+      const stock = stocks[i];
       await page.goto(stock.avanzaUrl, {
         timeout: 20000,
         waitUntil: "networkidle2",
