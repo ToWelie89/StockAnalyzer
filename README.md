@@ -15,7 +15,7 @@ MAIL_ADDRESS="<YOUR EMAIL>"
 MAIL_PASSWORD="<YOUR EMAIL PASSWORD>"
 ```
 3. In the file `mailer.js` check out the function `sendMail`. The object `transporter` might need to be configured depending on the email host used to send email. If the host is hotmal, then you don't need to change anything, but if it is another host you might have to specicy a host in the transporter-object. The email functionality relies on the npm module `nodemailer`, please read [this](https://nodemailer.com/smtp/) page on how to setup the transporter config accruately.
-4. Go to the file `stocks.js` and configure the stocks you wish to monitor here
+4. Go to the file `stocks.js` and configure the stocks you wish to monitor here. StockAnalyzer currently only supports links to `avanza.se`.
 
 ## Run scraping from terminal
 

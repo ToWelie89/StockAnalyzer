@@ -171,7 +171,7 @@ const sendMail = (mailData) =>
           }
         });
 
-        console.log('mailData', mailData);
+        //console.log('mailData', mailData);
 
         const ownedStocks = mailData.filter(x => x.ownsStock);
         const nonOwnedStocks = mailData.filter(x => !x.ownsStock);
@@ -224,7 +224,7 @@ const sendMail = (mailData) =>
             console.log(error);
             reject();
           } else {
-            console.log('Email sent: ' + info.response);
+            console.log('Email sent!');
             resolve();
           }
         });

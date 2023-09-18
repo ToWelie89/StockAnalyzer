@@ -2,7 +2,7 @@ const puppeteer = require("puppeteer");
 require('dotenv').config();
 
 const { sendMail } = require('./mailer.js');
-const { delay } = require('./helpers.js');
+const { delay, printTable } = require('./helpers.js');
 const { stocks } = require('./stocks.js');
 
 const round = (number, numberOfDecimals) => {
@@ -41,7 +41,7 @@ async function startScraping() {
         timeout: 20000,
         waitUntil: "networkidle2",
       });
-      await delay(2000);
+      await delay(process.env.NODE_ENV === 'production' ? 2000 : 300);
       await page.waitForSelector(".app-container");
 
       const values = [];
@@ -117,7 +117,7 @@ async function startScraping() {
         if (percentageDiff > 1) {
           diffPercent = (percentageDiff - 1) * 100;
         } else {
-          diffPercent = (1 - percentageDiff) * 100;
+          diffPercent = ((1 - percentageDiff) * 100) * -1;
         }
         diffPercent = round(diffPercent, 2);
         item.diffPercent = diffPercent;
@@ -126,25 +126,25 @@ async function startScraping() {
       item.ownsStock = stock.transactionCosts && stock.transactionCosts.length > 0;
       item.amount = stock.transactionCosts ? stock.transactionCosts.length : 0;
 
-      console.log(item);
-
       result.push(item);
     }
-    console.log(result);
+    //console.log(result);
   } catch (e) {
     console.error(e);
   } finally {
     await delay(process.env.NODE_ENV === 'production' ? 2000 : 300);
     await browser.close();
-    await sendMail(result);
+    await printTable(result);
+    if (process.env.MAIL_ADDRESS && process.env.MAIL_PASSWORD) {
+      await sendMail(result);
+    } else {
+      console.log('No email configured, skipping mail report');
+    }
   }
 }
 
 // Main function
 const run = async () => {
-  console.log('process.env');
-  console.log(process.env);
-
   console.log(`Starting scraping script...`);
   await startScraping();
 }
