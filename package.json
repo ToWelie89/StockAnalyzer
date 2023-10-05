@@ -1,6 +1,6 @@
 {
   "name": "ui",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Stock Scraper",
   "main": "server.js",
   "scripts": {
@@ -11,12 +11,14 @@
   "author": "ToWelie89",
   "license": "ISC",
   "dependencies": {
+    "chatgpt": "^5.2.5",
     "console-table-printer": "^2.11.2",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "json2csv": "^6.0.0-alpha.2",
     "nodemailer": "^6.9.4",
+    "openai": "^4.11.1",
     "puppeteer": "^19.7.2",
     "save": "^2.9.0"
   }

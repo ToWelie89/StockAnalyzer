@@ -2,15 +2,8 @@ const puppeteer = require("puppeteer");
 require('dotenv').config();
 
 const { sendMail } = require('./mailer.js');
-const { delay, printTable } = require('./helpers.js');
+const { delay, printTable, round } = require('./helpers.js');
 const { stocks } = require('./stocks.js');
-
-const round = (number, numberOfDecimals) => {
-  number = number * Math.pow(10, numberOfDecimals);
-  number = Math.round(number);
-  number = number / Math.pow(10, numberOfDecimals);
-  return number;
-}
 
 async function startScraping() {
   let result = [];
@@ -62,7 +55,7 @@ async function startScraping() {
             values.push(value);
           }
         } catch (e) {
-          console.error(e);
+          console.warn(`Could not find selector aza-period-button:nth-child(${j + 1}) for stock number ${i + 1}.`);
         }
       }
       const name = await page.$eval(

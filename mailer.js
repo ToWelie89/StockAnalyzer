@@ -4,14 +4,17 @@ require('dotenv').config();
 const GREEN_COLOR = 'green';
 const RED_COLOR = 'red';
 
-const generateTable = stocks => {
+const { round } = require('./helpers.js');
+const { getDescriptionOfOwnedStocks, getDescriptionOfNonOwnedStocks } = require('./aiHelper.js');
+
+const generateTable = (stocks, owned) => {
     let table = `
         <table border="1" style="width: 100%;">
         <thead>
             <tr>
                 <th>
                     <strong>
-                        Namn
+                        Name
                     </strong>
                 </th>
                 <th>
@@ -21,7 +24,7 @@ const generateTable = stocks => {
                 </th>
                 <th>
                     <strong>
-                        1v
+                        1w
                     </strong>
                 </th>
                 <th>
@@ -36,22 +39,22 @@ const generateTable = stocks => {
                 </th>
                 <th>
                     <strong>
-                        I år
+                        This year
                     </strong>
                 </th>
                 <th>
                     <strong>
-                        1 år
+                        1y
                     </strong>
                 </th>
                 <th>
                     <strong>
-                        3 år
+                        3y
                     </strong>
                 </th>
                 <th>
                     <strong>
-                        5 år
+                        5y
                     </strong>
                 </th>
                 <th>
@@ -59,36 +62,40 @@ const generateTable = stocks => {
                         Max
                     </strong>
                 </th>
-                <th>
-                    <strong>
-                        Antal
-                    </strong>
-                </th>
-                <th>
-                    <strong>
-                        Pris / aktie
-                    </strong>
-                </th>
-                <th>
-                    <strong>
-                        Totalt SEK investerat
-                    </strong>
-                </th>
-                <th>
-                    <strong>
-                        Totalt nuvarande värde
-                    </strong>
-                </th>
-                <th>
-                    <strong>
-                        SEK diff
-                    </strong>
-                </th>
-                <th>
-                    <strong>
-                        % diff
-                    </strong>
-                </th>
+                ${
+                    owned ? `
+                    <th>
+                        <strong>
+                            Amount
+                        </strong>
+                    </th>
+                    <th>
+                        <strong>
+                            Price/item
+                        </strong>
+                    </th>
+                    <th>
+                        <strong>
+                            Total investment
+                        </strong>
+                    </th>
+                    <th>
+                        <strong>
+                            Total current value
+                        </strong>
+                    </th>
+                    <th>
+                        <strong>
+                            Diff
+                        </strong>
+                    </th>
+                    <th>
+                        <strong>
+                            % Diff
+                        </strong>
+                    </th>
+                    ` : ''
+                }
             </tr>
         </thead>
     `;
@@ -134,24 +141,27 @@ const generateTable = stocks => {
             <td bgcolor="${getColor(data.allTimeChange)}">
                 ${data.allTimeChange ? `${data.allTimeChange}%` : '-'}
             </td>
-            <td>
-                ${data.amount} st
-            </td>
-            <td>
-                ${data.currentValue} ${data.currency}
-            </td>
-            <td>
-                ${data.totalMoneySpent ? `${data.totalMoneySpent} ${data.currency}` : '-'}
-            </td>
-            <td>
-                ${data.totalCurrentWorth ? `${data.totalCurrentWorth} ${data.currency}` : '-'}
-            </td>
-            <td bgcolor="${getColor(data.profitEarnedSEK)}">
-                ${data.profitEarnedSEK ? `${data.profitEarnedSEK} ${data.currency}` : '-'}
-            </td>
-            <td bgcolor="${getColor(data.diffPercent)}">
-                ${data.diffPercent || 0}%
-            </td>
+            ${
+                owned ? `
+                <td>
+                    ${data.amount} st
+                </td>
+                <td>
+                    ${data.currentValue} ${data.currency}
+                </td>
+                <td>
+                    ${data.totalMoneySpent ? `${round(data.totalMoneySpent)} ${data.currency}` : '-'}
+                </td>
+                <td>
+                    ${data.totalCurrentWorth ? `${round(data.totalCurrentWorth)} ${data.currency}` : '-'}
+                </td>
+                <td bgcolor="${getColor(data.profitEarnedSEK)}">
+                    ${data.profitEarnedSEK ? `${round(data.profitEarnedSEK)} ${data.currency}` : '-'}
+                </td>
+                <td bgcolor="${getColor(data.diffPercent)}">
+                    ${data.diffPercent || 0}%
+                </td>` : ''
+            }            
         </tr>
         `;
     }
@@ -159,76 +169,90 @@ const generateTable = stocks => {
     return table;
 }
 
-const sendMail = (mailData) =>
-    new Promise((resolve, reject) => {
-        const transporter = nodemailer.createTransport({
-          service: 'hotmail',
-          secure: false,
-          port: 587,
-          auth: {
+const sendMail = async mailData => {
+    const transporter = nodemailer.createTransport({
+        service: 'hotmail',
+        secure: false,
+        port: 587,
+        auth: {
             user: process.env.MAIL_ADDRESS,
             pass: process.env.MAIL_PASSWORD
-          }
-        });
-
-        //console.log('mailData', mailData);
-
-        const ownedStocks = mailData.filter(x => x.ownsStock);
-        const nonOwnedStocks = mailData.filter(x => !x.ownsStock);
-        
-        const html = `
+        }
+    });
+    
+    const ownedStocks = mailData.filter(x => x.ownsStock);
+    const nonOwnedStocks = mailData.filter(x => !x.ownsStock);
+    
+    let descriptionOfOwnedStocks;
+    let descriptionOfNonOwnedStocks;
+    
+    if (process.env.CHATGPT_KEY) {
+        console.log('Ask Open-AI to summarize the current situation ...');
+        if (ownedStocks && ownedStocks.length > 0) {
+            descriptionOfOwnedStocks = await getDescriptionOfOwnedStocks(ownedStocks);
+        }
+        if (nonOwnedStocks && nonOwnedStocks.length > 0) {
+            descriptionOfNonOwnedStocks = await getDescriptionOfNonOwnedStocks(nonOwnedStocks);
+        }
+    } else {
+        console.warn('No chatgpt token found, cannot formulate description using open AI');
+    }
+    
+    const html = `
+        <div>
             <div>
-                <div>
-                    <h2>
-                        Hej Martin!
-                    </h2>
-                </div>
-                <div>
-                    <p>
-                        Detta är din dagliga aktie-rapport.
-                    </p>
-                </div>
-                <div>
-                    <h3>Aktier du äger</h3>
-                </div>
-                <div>
-                    ${generateTable(ownedStocks)}
-                </div>
-                <div style="margin-top: 25px;">
-                    <h3>Aktier du inte äger men bevakar</h3>
-                </div>
-                <div>
-                    ${generateTable(nonOwnedStocks)}
-                </div>
+                <h2>
+                    Hello ${process.env.name ? process.env.name : 'anonymous user'}!
+                </h2>
             </div>
-        `;
-
-        const date = new Date();
-        let month = date.getMonth() >= 10 ? date.getMonth() : `0${date.getMonth()}`;
-        let day = date.getDate() >= 10 ? date.getDate() : `0${date.getDate()}`;
-        let year = date.getFullYear();
-        let hours = date.getHours() >= 10 ? date.getHours() : `0${date.getHours()}`;
-        let minutes = date.getMinutes() >= 10 ? date.getMinutes() : `0${date.getMinutes()}`;
-        let seconds = date.getSeconds() >= 10 ? date.getSeconds() : `0${date.getSeconds()}`;
-        const dateAndTimestamp = `${month}-${day}-${year}--${hours}:${minutes}:${seconds}`;
-        
-        const mailOptions = {
-          from: process.env.MAIL_ADDRESS,
-          to: process.env.MAIL_ADDRESS,
-          subject: `💰 Aktierapport ${dateAndTimestamp}`,
-          html
-        };
-        
-        transporter.sendMail(mailOptions, function(error, info){
-          if (error) {
+            <div>
+                <p>
+                    This is your daily stock report.
+                </p>
+            </div>
+            <div>
+                <h3>Items you own</h3>
+            </div>
+            ${ descriptionOfOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfOwnedStocks}</div>` : '' }
+            <div>
+                ${generateTable(ownedStocks, true)}
+            </div>
+            <div style="margin-top: 25px;">
+                <h3>Items you do not own but are currently monitoring</h3>
+            </div>
+            ${ descriptionOfNonOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfNonOwnedStocks}</div>` : '' }
+            <div>
+                ${generateTable(nonOwnedStocks, false)}
+            </div>
+        </div>
+    `;
+    
+    const date = new Date();
+    let month = date.getMonth() >= 10 ? date.getMonth() : `0${date.getMonth()}`;
+    let day = date.getDate() >= 10 ? date.getDate() : `0${date.getDate()}`;
+    let year = date.getFullYear();
+    let hours = date.getHours() >= 10 ? date.getHours() : `0${date.getHours()}`;
+    let minutes = date.getMinutes() >= 10 ? date.getMinutes() : `0${date.getMinutes()}`;
+    let seconds = date.getSeconds() >= 10 ? date.getSeconds() : `0${date.getSeconds()}`;
+    const dateAndTimestamp = `${month}-${day}-${year} ${hours}:${minutes}:${seconds}`;
+    
+    const mailOptions = {
+        from: process.env.MAIL_ADDRESS,
+        to: process.env.MAIL_ADDRESS,
+        subject: `💰 Stock report ${dateAndTimestamp}`,
+        html
+    };
+    
+    transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
             console.log(error);
-            reject();
-          } else {
+            throw 'Could not send email';
+        } else {
             console.log('Email sent!');
-            resolve();
-          }
-        });
-    })
+            return;
+        }
+    });
+}
 
 module.exports = {
     sendMail

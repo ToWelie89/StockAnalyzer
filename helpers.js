@@ -76,8 +76,16 @@ const printTable = data => new Promise(resolve => {
     resolve();
 });
 
+const round = (number, numberOfDecimals = 2) => {
+    number = number * Math.pow(10, numberOfDecimals);
+    number = Math.round(number);
+    number = number / Math.pow(10, numberOfDecimals);
+    return number;
+}
+
 module.exports = {
     getParamters,
     delay,
-    printTable
+    printTable,
+    round
 };
