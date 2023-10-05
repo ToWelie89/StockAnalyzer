@@ -1,3 +1,4 @@
+![Logo](https://raw.githubusercontent.com/ToWelie89/StockAnalyzer/master/logo.png)
 ## Introduction
 
 This script will analyze current development of stocks and then send a mail to a given address where you get a report summary.
