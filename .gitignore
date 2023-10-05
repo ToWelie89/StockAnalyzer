@@ -2,4 +2,3 @@ node_modules
 .env
 .cache
 run.exe
-stocksOLD.js
