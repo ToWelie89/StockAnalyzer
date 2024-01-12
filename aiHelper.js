@@ -83,7 +83,7 @@ const getDescriptionOfOwnedStocks = async stocks => {
             "total_tokens": 825
         }
     } */
-    const response = await performAIRequest(`Can you please formulate a summary, with maximum 500 characters, from the following text that details the development of stocks that I own: ${text}`);
+    const response = await performAIRequest(`Can you please formulate a summary in words, do not just repeat numbers, with maximum 300 characters, from the following text that details the development of stocks that I own, also try to determine which stocks are worth to continue investing in: ${text}`);
     return (response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content)
         ? response.choices[0].message.content
         : 'N/A';
@@ -120,7 +120,7 @@ const getDescriptionOfNonOwnedStocks = async stocks => {
         }
     }
 
-    const response = await performAIRequest(`Can you please formulate a summary, with maximum 500 characters, from the following text that details the development of stocks that I am tracking but do not own, also try to suggest which ones would be best to invest in: ${text}`);
+    const response = await performAIRequest(`Can you please formulate a summary, with maximum 400 characters, from the following text that details the development of stocks that I am tracking but do not own, also try to suggest which ones would be best to invest in: ${text}`);
     return (response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content)
         ? response.choices[0].message.content
         : 'N/A';

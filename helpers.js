@@ -31,10 +31,27 @@ const delay = ms => new Promise(resolve => {
     }, ms);
 });
 
-const printTable = data => new Promise(resolve => {
+const printTable = async data => {
+    const ownedCryptos = data.filter(x => x.cryptoCoin);
     const ownedStocks = data.filter(x => x.ownsStock);
-    const nonOwnedStocks = data.filter(x => !x.ownsStock);
+    const nonOwnedStocks = data.filter(x => !x.ownsStock && !x.cryptoCoin);
 
+    const generateCryptoTable = table => {
+        const p = new Table({
+            columns: [
+                { name: 'Name', alignment: 'left', color: 'red' }
+            ]
+        });
+        table.forEach(row => {
+            const rowObj = {
+                'Name': row.name,
+                'Amount owned': row.amountOwned,
+                'Total value': `${row.currentTotalValue} ${row.currency}`
+            };
+            p.addRow(rowObj);
+        });
+        p.printTable();
+    }
     const generateTable = (table, ownsStock) => {
         const p = new Table({
             columns: [
@@ -57,9 +74,9 @@ const printTable = data => new Promise(resolve => {
             };
             if (ownsStock) {
                 rowObj['Amount'] = `${row.amount}`;
-                rowObj['Total money spent'] = `${row.totalMoneySpent} ${row.currency}`;
-                rowObj['Total value'] = `${row.totalCurrentWorth} ${row.currency}`;
-                rowObj['Total value'] = `${row.totalCurrentWorth} ${row.currency}`;
+                rowObj['Total money spent'] = `${round(row.totalMoneySpent)} ${row.currency}`;
+                rowObj['Total value'] = `${round(row.totalCurrentWorth)} ${row.currency}`;
+                rowObj['Total value SEK'] = row.totalCurrentWorthInSEK ? `${row.totalCurrentWorthInSEK} SEK` : '-';
                 rowObj['Profit'] = `${row.profitEarnedSEK} ${row.currency}`;
                 rowObj['Profit %'] = `${row.diffPercent}%`;
             }
@@ -68,13 +85,31 @@ const printTable = data => new Promise(resolve => {
         p.printTable();
     }
 
-    console.log('Stocks you own');
-    generateTable(ownedStocks, true);
-    console.log('Stocks you don\'t own but are monitoring');
-    generateTable(nonOwnedStocks, false);
+    if (ownedCryptos && ownedCryptos.length > 0) {
+        console.log('Cryptos you own');
+        generateCryptoTable(ownedCryptos);
+    }
+    if (ownedStocks && ownedStocks.length > 0) {
+        console.log('Stocks you own');
+        generateTable(ownedStocks, true);
+        let totalWorthSEK = 0;
+        for (let i = 0; i < ownedStocks.length; i++) {
+            const s = ownedStocks[i];
+            if (s.currency === 'SEK' && s.totalCurrentWorth) {
+                totalWorthSEK += s.totalCurrentWorth;
+            } else if (s.totalCurrentWorthInSEK) {
+                totalWorthSEK += s.totalCurrentWorthInSEK;
+            }
+        }
+        console.log(`All currently worth ${round(totalWorthSEK)} SEK`);
+    }
 
-    resolve();
-});
+    if (nonOwnedStocks && nonOwnedStocks.length > 0) {
+        console.log('Stocks you don\'t own but are monitoring');
+        generateTable(nonOwnedStocks, false);
+    }
+    return;
+};
 
 const round = (number, numberOfDecimals = 2) => {
     number = number * Math.pow(10, numberOfDecimals);

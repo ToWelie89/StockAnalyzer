@@ -7,6 +7,48 @@ const RED_COLOR = 'red';
 const { round } = require('./helpers.js');
 const { getDescriptionOfOwnedStocks, getDescriptionOfNonOwnedStocks } = require('./aiHelper.js');
 
+const generateCryptoTable = stocks => {
+    let table = `
+        <table border="1" style="width: 100%;">
+        <thead>
+            <tr>
+                <th>
+                    <strong>
+                        Name
+                    </strong>
+                </th>
+                <th>
+                    <strong>
+                        Amount owned
+                    </strong>
+                </th>
+                <th>
+                    <strong>
+                        Total value
+                    </strong>
+                </th>
+            </tr>
+        </thead>
+    `;
+    for (let i = 0; i < stocks.length; i++) {
+        const data = stocks[i];
+        table += `
+        <tr>
+            <td>
+                ${data.name}
+            </td>
+            <td>
+                ${data.amountOwned}
+            </td>
+            <td>
+                ${data.currentTotalValue} ${data.currency}
+            </td>
+        </tr>
+        `;
+    }
+    table += '</table>';
+    return table;
+}
 const generateTable = (stocks, owned) => {
     let table = `
         <table border="1" style="width: 100%;">
@@ -81,7 +123,12 @@ const generateTable = (stocks, owned) => {
                     </th>
                     <th>
                         <strong>
-                            Total current value
+                            Total value
+                        </strong>
+                    </th>
+                    <th>
+                        <strong>
+                            Total value SEK
                         </strong>
                     </th>
                     <th>
@@ -155,6 +202,9 @@ const generateTable = (stocks, owned) => {
                 <td>
                     ${data.totalCurrentWorth ? `${round(data.totalCurrentWorth)} ${data.currency}` : '-'}
                 </td>
+                <td>
+                    ${data.totalCurrentWorthInSEK ? `${round(data.totalCurrentWorthInSEK)} ${data.currency}` : '-'}
+                </td>
                 <td bgcolor="${getColor(data.profitEarnedSEK)}">
                     ${data.profitEarnedSEK ? `${round(data.profitEarnedSEK)} ${data.currency}` : '-'}
                 </td>
@@ -180,8 +230,9 @@ const sendMail = async mailData => {
         }
     });
     
+    const ownedCryptos = mailData.filter(x => x.cryptoCoin);
     const ownedStocks = mailData.filter(x => x.ownsStock);
-    const nonOwnedStocks = mailData.filter(x => !x.ownsStock);
+    const nonOwnedStocks = mailData.filter(x => !x.ownsStock && !x.cryptoCoin);
     
     let descriptionOfOwnedStocks;
     let descriptionOfNonOwnedStocks;
@@ -211,14 +262,20 @@ const sendMail = async mailData => {
                 </p>
             </div>
             <div>
-                <h3>Items you own</h3>
+                <h3>Cryptos you own</h3>
+            </div>
+            <div>
+                ${generateCryptoTable(ownedCryptos)}
+            </div>
+            <div>
+                <h3>Avanza items you own</h3>
             </div>
             ${ descriptionOfOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfOwnedStocks}</div>` : '' }
             <div>
                 ${generateTable(ownedStocks, true)}
             </div>
             <div style="margin-top: 25px;">
-                <h3>Items you do not own but are currently monitoring</h3>
+                <h3>Avanza items you do not own but are currently monitoring</h3>
             </div>
             ${ descriptionOfNonOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfNonOwnedStocks}</div>` : '' }
             <div>
