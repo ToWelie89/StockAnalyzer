@@ -5,6 +5,8 @@ const { sendMail } = require('./mailer.js');
 const { delay, printTable, round } = require('./helpers.js');
 const { stocks } = require('./stocks.js');
 
+const currencies = {};
+
 const getHistory = async stock => {
   const id = (stock.avanzaUrl.match(/[0-9]{5,7}/g) && stock.avanzaUrl.match(/[0-9]{5,7}/g).length === 1) ? stock.avanzaUrl.match(/[0-9]{5,7}/g)[0] : null;
   if (id) {
@@ -16,6 +18,24 @@ const getHistory = async stock => {
   }
 }
 
+const lookUpCurrency = async (page, currency) => {
+  await page.goto(`https://www.google.com/search?q=1+${currency}+to+sek`, {
+    timeout: 20000,
+    waitUntil: "networkidle2",
+  });
+  await delay(process.env.NODE_ENV === 'production' ? 2000 : 500);
+  await page.waitForSelector("#result-stats");
+  const elements = await page.$$("div[data-name] input[aria-label]");
+  if (elements && elements[1]) {
+      let currentValue = await elements[1].evaluate(x => x.value);
+      currentValue = Number(currentValue);
+      if (currentValue) {
+        currencies[currency] = currentValue;
+      }
+  }
+  return;
+}
+
 const startScraping = async () => {
   let result = [];
   let browser;
@@ -25,7 +45,7 @@ const startScraping = async () => {
     console.log(111, process.env.NODE_ENV)
     browser = await puppeteer.launch({
       pipe: true,
-      headless: false,
+      headless: true,
       timeout: 10000,
       defaultViewport: null,
       args: [
@@ -42,6 +62,10 @@ const startScraping = async () => {
           : puppeteer.executablePath()
     });
     page = await browser.newPage({ timeout: 8000 });
+
+    await lookUpCurrency(page, 'USD');
+    await lookUpCurrency(page, 'EUR');
+    console.log(currencies);
 
     for (let i = 0; i < stocks.length; i++) {
       console.log(`Scraping data for stock number ${i + 1}`);
@@ -139,19 +163,23 @@ const startScraping = async () => {
 
         // look up currency on google
         if (item.ownsStock && item.currency !== 'SEK') {
-          await page.goto(`https://www.google.se/search?q=${item.totalCurrentWorth}+${currency}+to+SEK`, {
-            timeout: 20000,
-            waitUntil: "networkidle2",
-          });
-          await delay(process.env.NODE_ENV === 'production' ? 2000 : 500);
-          await page.waitForSelector("#result-stats");
-          const elements = await page.$$("div[data-name] input[aria-label]");
-          if (elements && elements[1]) {
-              let currentValue = await elements[1].evaluate(x => x.value);
-              currentValue = Number(currentValue);
-              if (currentValue) {
-                  item.totalCurrentWorthInSEK = currentValue;
-              }
+          if (currencies[item.currency]) {
+            item.totalCurrentWorthInSEK = round(item.totalCurrentWorth * currencies[item.currency]);
+          } else {
+            await page.goto(`https://www.google.se/search?q=${item.totalCurrentWorth}+${currency}+to+SEK`, {
+              timeout: 20000,
+              waitUntil: "networkidle2",
+            });
+            await delay(process.env.NODE_ENV === 'production' ? 2000 : 500);
+            await page.waitForSelector("#result-stats");
+            const elements = await page.$$("div[data-name] input[aria-label]");
+            if (elements && elements[1]) {
+                let currentValue = await elements[1].evaluate(x => x.value);
+                currentValue = Number(currentValue);
+                if (currentValue) {
+                    item.totalCurrentWorthInSEK = currentValue;
+                }
+            }
           }
         }
         result.push(item);
