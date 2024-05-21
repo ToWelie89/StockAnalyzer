@@ -2,24 +2,33 @@
   "name": "ui",
   "version": "2.0.3",
   "description": "Stock Scraper",
-  "main": "server.js",
+  "main": "kraken.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
+    "test": "jest",
+    "start": "node kraken.js",
+    "task": "node run.js",
     "build": "nexe run.js --build"
   },
   "author": "ToWelie89",
   "license": "ISC",
   "dependencies": {
+    "asciichart": "^1.5.25",
+    "chance": "^1.1.11",
     "chatgpt": "^5.2.5",
     "console-table-printer": "^2.11.2",
+    "csv-parse": "^5.5.3",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "json2csv": "^6.0.0-alpha.2",
+    "kraken-api": "^1.0.1",
+    "node-notifier": "^10.0.1",
     "nodemailer": "^6.9.4",
     "openai": "^4.11.1",
     "puppeteer": "^19.7.2",
     "save": "^2.9.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }

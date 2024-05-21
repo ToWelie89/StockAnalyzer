@@ -1,9 +1,10 @@
-const puppeteer = require("puppeteer");
 require('dotenv').config();
+const puppeteer = require("puppeteer");
+const KrakenClient = require('kraken-api');
+let kraken;
 
 const { sendMail } = require('./mailer.js');
-const { delay, printTable, round } = require('./helpers.js');
-const { stocks } = require('./stocks.js');
+const { delay, printTable, round, readFile } = require('./helpers.js');
 
 const currencies = {};
 
@@ -36,13 +37,22 @@ const lookUpCurrency = async (page, currency) => {
   return;
 }
 
-const startScraping = async () => {
+const startScraping = async (userSettings = null) => {
+  if (!userSettings) {
+    console.error('No user settings file found, aborting');
+    return;
+  }
+  if (!userSettings.stocks) {
+    console.error('User settings file does not contain stocks list, aborting');
+    return;
+  }
+
   let result = [];
   let browser;
   let page;
+  const stocks = userSettings.stocks;
   
   try {
-    console.log(111, process.env.NODE_ENV)
     browser = await puppeteer.launch({
       pipe: true,
       headless: true,
@@ -66,6 +76,38 @@ const startScraping = async () => {
     await lookUpCurrency(page, 'USD');
     await lookUpCurrency(page, 'EUR');
     console.log(currencies);
+
+    if (userSettings.readKrakenBalance) {
+      const currentBtcPrice = Number((await kraken.api('Ticker', { pair: 'XXBTZEUR' })).result.XXBTZEUR.c[0]);
+      const balance = await kraken.api('Balance');
+
+      const mapping = {
+        XXBT: 'BTC',
+        ZEUR: 'EUROS'
+      }
+
+      Object.keys(balance.result).forEach(key => {
+        const val = Number(balance.result[key]);
+        if (val && val > 0) {
+          const name = mapping[key] || key;
+          let currentTotalValue;
+          if (name === 'EUROS') {
+            currentTotalValue = val * currencies.EUR;
+          } else {
+            currentTotalValue = round(Number((val * currentBtcPrice) * currencies.EUR));
+          }
+          result.push({
+            cryptoCoin: true,
+            currentTotalValue,
+            name: name,
+            currency: 'SEK',
+            amountOwned: val
+          });
+        }
+      })
+
+      console.log(result);
+    }
 
     for (let i = 0; i < stocks.length; i++) {
       console.log(`Scraping data for stock number ${i + 1}`);
@@ -121,6 +163,7 @@ const startScraping = async () => {
         currentValue = Number(currentValue);
   
         const item = {
+          avanzaUrl: stock.avanzaUrl,
           name,
           oneDayChange: values[0],
           oneWeekChange: values[1],
@@ -183,28 +226,6 @@ const startScraping = async () => {
           }
         }
         result.push(item);
-      } else if (stock.cryptoCoin) {
-        await page.goto(`https://www.google.com/search?q=${stock.amountOwned}+${stock.name}+to+${stock.currency}`, {
-          timeout: 20000,
-          waitUntil: "networkidle2",
-        });
-        await delay(process.env.NODE_ENV === 'production' ? 2000 : 500);
-        await page.waitForSelector("#result-stats");
-
-        const elements = await page.$$("div[data-name] input[aria-label]");
-        if (elements && elements[1]) {
-          let currentValue = await elements[1].evaluate(x => x.value);
-          currentValue = Number(currentValue);
-          if (currentValue) {
-            result.push({
-              cryptoCoin: true,
-              currentTotalValue: currentValue,
-              name: stock.name,
-              currency: stock.currency,
-              amountOwned: stock.amountOwned
-            });
-          }
-        }
       }
     }
     //console.log(result);
@@ -225,7 +246,14 @@ const startScraping = async () => {
 // Main function
 const run = async () => {
   console.log(`Starting scraping script...`);
-  await startScraping();
+  const userSettings = await readFile('usersettings.json');
+
+  if (userSettings.readKrakenBalance && process.env.KRAKEN_API_KEY && process.env.KRAKEN_PRIVATE_KEY) {
+    kraken = new KrakenClient(process.env.KRAKEN_API_KEY, process.env.KRAKEN_PRIVATE_KEY);
+    //console.log(await kraken.api('Balance'));
+  }
+
+  await startScraping(userSettings);
 }
 
 module.exports = {

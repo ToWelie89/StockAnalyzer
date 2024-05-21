@@ -2,3 +2,7 @@ node_modules
 .env
 .cache
 run.exe
+usersettings.json
+task_log.txt
+btceuro.csv
+logs

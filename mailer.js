@@ -41,7 +41,7 @@ const generateCryptoTable = stocks => {
                 ${data.amountOwned}
             </td>
             <td>
-                ${data.currentTotalValue} ${data.currency}
+                ${round(data.currentTotalValue)} ${data.currency}
             </td>
         </tr>
         `;
@@ -159,7 +159,9 @@ const generateTable = (stocks, owned) => {
         table += `
         <tr>
             <td>
-                ${data.name}
+                <a href="${data.avanzaUrl}" target="_blank">
+                    ${data.name}
+                </a>
             </td>
             <td bgcolor="${getColor(data.oneDayChange)}">
                 ${data.oneDayChange}%
@@ -203,7 +205,7 @@ const generateTable = (stocks, owned) => {
                     ${data.totalCurrentWorth ? `${round(data.totalCurrentWorth)} ${data.currency}` : '-'}
                 </td>
                 <td>
-                    ${data.totalCurrentWorthInSEK ? `${round(data.totalCurrentWorthInSEK)} ${data.currency}` : '-'}
+                    ${data.totalCurrentWorthInSEK ? `${round(data.totalCurrentWorthInSEK)} SEK` : '-'}
                 </td>
                 <td bgcolor="${getColor(data.profitEarnedSEK)}">
                     ${data.profitEarnedSEK ? `${round(data.profitEarnedSEK)} ${data.currency}` : '-'}
@@ -248,6 +250,21 @@ const sendMail = async mailData => {
     } else {
         console.warn('No chatgpt token found, cannot formulate description using open AI');
     }
+
+    const ownedCryptosTotalWorth = ownedCryptos.reduce((t,c) => {
+        if (c.currentTotalValue) {
+            t += Number(c.currentTotalValue);
+        }
+        return t;
+    }, 0);
+    const ownedStocksTotalWorth = ownedStocks.reduce((t,c) => {
+        if (c.currency === 'SEK' && c.totalCurrentWorth) {
+            t += Number(c.totalCurrentWorth);
+        } else if (c.totalCurrentWorthInSEK) {
+            t += Number(c.totalCurrentWorthInSEK);
+        }
+        return t;
+    }, 0);
     
     const html = `
         <div>
@@ -262,10 +279,13 @@ const sendMail = async mailData => {
                 </p>
             </div>
             <div>
-                <h3>Cryptos you own</h3>
+                <h3>Kraken balance</h3>
             </div>
             <div>
                 ${generateCryptoTable(ownedCryptos)}
+            </div>
+            <div>
+                Total worth: ${round(ownedCryptosTotalWorth)} SEK
             </div>
             <div>
                 <h3>Avanza items you own</h3>
@@ -273,6 +293,9 @@ const sendMail = async mailData => {
             ${ descriptionOfOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfOwnedStocks}</div>` : '' }
             <div>
                 ${generateTable(ownedStocks, true)}
+            </div>
+            <div>
+                Total worth: ${round(ownedStocksTotalWorth)} SEK
             </div>
             <div style="margin-top: 25px;">
                 <h3>Avanza items you do not own but are currently monitoring</h3>
@@ -295,7 +318,7 @@ const sendMail = async mailData => {
     
     const mailOptions = {
         from: process.env.MAIL_ADDRESS,
-        to: process.env.MAIL_ADDRESS,
+        to: process.env.MAIL_ADDRESS_TO,
         subject: `💰 Stock report ${dateAndTimestamp}`,
         html
     };
