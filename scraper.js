@@ -28,11 +28,11 @@ const lookUpCurrency = async (page, currency) => {
   await page.waitForSelector("#result-stats");
   const elements = await page.$$("div[data-name] input[aria-label]");
   if (elements && elements[1]) {
-      let currentValue = await elements[1].evaluate(x => x.value);
-      currentValue = Number(currentValue);
-      if (currentValue) {
-        currencies[currency] = currentValue;
-      }
+    let currentValue = await elements[1].evaluate(x => x.value);
+    currentValue = Number(currentValue);
+    if (currentValue) {
+      currencies[currency] = currentValue;
+    }
   }
   return;
 }
@@ -51,7 +51,7 @@ const startScraping = async (userSettings = null) => {
   let browser;
   let page;
   const stocks = userSettings.stocks;
-  
+
   try {
     browser = await puppeteer.launch({
       pipe: true,
@@ -120,7 +120,7 @@ const startScraping = async (userSettings = null) => {
         });
         await delay(process.env.NODE_ENV === 'production' ? 2000 : 300);
         await page.waitForSelector(".app-container");
-  
+
         const values = [];
         for (let j = 0; j < 9; j++) {
           let value;
@@ -150,18 +150,18 @@ const startScraping = async (userSettings = null) => {
           'aza-quote span[data-e2e="tbs-quote-latest-value"]',
           (element) => element.textContent
         );
-  
+
         let currency;
         if (currentValue.includes('SEK')) currency = 'SEK';
         if (currentValue.includes('USD')) currency = 'USD';
-  
+
         currentValue = currentValue.trim();
         currentValue = currentValue.replaceAll(/\s/g, '');
         currentValue = currentValue.replaceAll(/SEK/g, '');
         currentValue = currentValue.replaceAll(/USD/g, '');
         currentValue = currentValue.replace(',', '.');
         currentValue = Number(currentValue);
-  
+
         const item = {
           avanzaUrl: stock.avanzaUrl,
           name,
@@ -177,21 +177,21 @@ const startScraping = async (userSettings = null) => {
           currentValue,
           currency
         };
-  
+
         if (stock.transactionCosts && stock.transactionCosts.length > 0) {
           const totalMoneySpent = stock.transactionCosts.reduce((t, c) => {
             t += (c.cost * c.amount);
             return t;
           }, 0);
-          const totalCurrentWorth = stock.transactionCosts.reduce((t,c) => t += c.amount, 0) * currentValue;
+          const totalCurrentWorth = stock.transactionCosts.reduce((t, c) => t += c.amount, 0) * currentValue;
           item.totalMoneySpent = totalMoneySpent;
           item.totalCurrentWorth = totalCurrentWorth;
-  
+
           item.profitEarnedSEK = round(totalCurrentWorth - totalMoneySpent, 2);
-  
+
           const percentageDiff = totalCurrentWorth / totalMoneySpent;
           let diffPercent;
-  
+
           if (percentageDiff > 1) {
             diffPercent = (percentageDiff - 1) * 100;
           } else {
@@ -199,10 +199,17 @@ const startScraping = async (userSettings = null) => {
           }
           diffPercent = round(diffPercent, 2);
           item.diffPercent = diffPercent;
+
+          const totalItemsBought = stock.transactionCosts.reduce((t, c) => {
+            t += c.amount;
+            return t;
+          }, 0);
+          const avgPricePerItem = round(totalMoneySpent / totalItemsBought);
+          item.avgPricePerItem = avgPricePerItem;
         }
-  
+
         item.ownsStock = stock.transactionCosts && stock.transactionCosts.length > 0;
-        item.amount = stock.transactionCosts ? stock.transactionCosts.reduce((t,c) => t += c.amount, 0) : 0;
+        item.amount = stock.transactionCosts ? stock.transactionCosts.reduce((t, c) => t += c.amount, 0) : 0;
 
         // look up currency on google
         if (item.ownsStock && item.currency !== 'SEK') {
@@ -217,11 +224,11 @@ const startScraping = async (userSettings = null) => {
             await page.waitForSelector("#result-stats");
             const elements = await page.$$("div[data-name] input[aria-label]");
             if (elements && elements[1]) {
-                let currentValue = await elements[1].evaluate(x => x.value);
-                currentValue = Number(currentValue);
-                if (currentValue) {
-                    item.totalCurrentWorthInSEK = currentValue;
-                }
+              let currentValue = await elements[1].evaluate(x => x.value);
+              currentValue = Number(currentValue);
+              if (currentValue) {
+                item.totalCurrentWorthInSEK = currentValue;
+              }
             }
           }
         }

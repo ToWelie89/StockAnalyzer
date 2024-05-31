@@ -61,22 +61,22 @@ const printTable = async (data, showHeader = true) => {
         table.forEach((row) => {
             const rowObj = {
                 Name: row.name,
-                "1d": `${row.oneDayChange >= 0 ? "+" : ""}${row.oneDayChange}%`,
-                "1w": `${row.oneWeekChange >= 0 ? "+" : ""}${row.oneWeekChange}%`,
-                "1m": `${row.oneMonthChange >= 0 ? "+" : ""}${row.oneMonthChange}%`,
-                "3m": `${row.threeMonthsChange >= 0 ? "+" : ""}${row.threeMonthsChange
-                    }%`,
-                "1y": `${row.oneYearChange >= 0 ? "+" : ""}${row.oneYearChange}%`,
-                "This year": `${row.thisYearChange >= 0 ? "+" : ""}${row.thisYearChange
-                    }%`,
-                "3y": `${row.threeYearsChange >= 0 ? "+" : ""}${row.threeYearsChange}%`,
-                "5y": `${row.fiveYearsChange >= 0 ? "+" : ""}${row.fiveYearsChange}%`,
-                "All time": `${row.allTimeChange >= 0 ? "+" : ""}${row.allTimeChange}%`,
+                "1d": row.oneDayChange ? (`${row.oneDayChange >= 0 ? "+" : ""}${row.oneDayChange}%`) : '-',
+                "1w": row.oneWeekChange ? (`${row.oneWeekChange >= 0 ? "+" : ""}${row.oneWeekChange}%`) : '-',
+                "1m": row.oneMonthChange ? (`${row.oneMonthChange >= 0 ? "+" : ""}${row.oneMonthChange}%`) : '-',
+                "3m": row.threeMonthsChange  ? (`${row.threeMonthsChange >= 0 ? "+" : ""}${row.threeMonthsChange }%`) : '-',
+                "1y": row.oneYearChange ? (`${row.oneYearChange >= 0 ? "+" : ""}${row.oneYearChange}%`) : '-',
+                "This year": row.thisYearChange  ? (`${row.thisYearChange >= 0 ? "+" : ""}${row.thisYearChange }%`) : '-',
+                "3y": row.threeYearsChange ? (`${row.threeYearsChange >= 0 ? "+" : ""}${row.threeYearsChange}%`) : '-',
+                "5y": row.fiveYearsChange ? (`${row.fiveYearsChange >= 0 ? "+" : ""}${row.fiveYearsChange}%`) : '-',
+                "All time": row.allTimeChange ? (`${row.allTimeChange >= 0 ? "+" : ""}${row.allTimeChange}%`) : '-',
                 "Current value": `${row.currentValue}  ${row.currency}`,
             };
             if (ownsStock) {
                 rowObj["Amount"] = `${row.amount}`;
                 rowObj["Total money spent"] = `${round(row.totalMoneySpent)} ${row.currency
+                    }`;
+                rowObj["Avg/item"] = `${round(row.avgPricePerItem)} ${row.currency
                     }`;
                 rowObj["Total value"] = `${round(row.totalCurrentWorth)} ${row.currency
                     }`;

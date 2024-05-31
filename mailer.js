@@ -123,6 +123,11 @@ const generateTable = (stocks, owned) => {
                     </th>
                     <th>
                         <strong>
+                            Avg/item
+                        </strong>
+                    </th>
+                    <th>
+                        <strong>
                             Total value
                         </strong>
                     </th>
@@ -200,6 +205,9 @@ const generateTable = (stocks, owned) => {
                 </td>
                 <td>
                     ${data.totalMoneySpent ? `${round(data.totalMoneySpent)} ${data.currency}` : '-'}
+                </td>
+                <td>
+                    ${data.avgPricePerItem ? `${round(data.avgPricePerItem)} ${data.currency}` : '-'}
                 </td>
                 <td>
                     ${data.totalCurrentWorth ? `${round(data.totalCurrentWorth)} ${data.currency}` : '-'}
