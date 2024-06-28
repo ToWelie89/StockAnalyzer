@@ -75,6 +75,8 @@ const startScraping = async (userSettings = null) => {
 
     await lookUpCurrency(page, 'USD');
     await lookUpCurrency(page, 'EUR');
+    await lookUpCurrency(page, 'CAD');
+    await lookUpCurrency(page, 'DKK');
     console.log(currencies);
 
     if (userSettings.readKrakenBalance) {
@@ -154,11 +156,15 @@ const startScraping = async (userSettings = null) => {
         let currency;
         if (currentValue.includes('SEK')) currency = 'SEK';
         if (currentValue.includes('USD')) currency = 'USD';
+        if (currentValue.includes('CAD')) currency = 'CAD';
+        if (currentValue.includes('DKK')) currency = 'DKK';
 
         currentValue = currentValue.trim();
         currentValue = currentValue.replaceAll(/\s/g, '');
         currentValue = currentValue.replaceAll(/SEK/g, '');
         currentValue = currentValue.replaceAll(/USD/g, '');
+        currentValue = currentValue.replaceAll(/CAD/g, '');
+        currentValue = currentValue.replaceAll(/DKK/g, '');
         currentValue = currentValue.replace(',', '.');
         currentValue = Number(currentValue);
 
