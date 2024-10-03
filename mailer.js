@@ -7,6 +7,19 @@ const RED_COLOR = 'red';
 const { round } = require('./helpers.js');
 const { getDescriptionOfOwnedStocks, getDescriptionOfNonOwnedStocks } = require('./aiHelper.js');
 
+const PREDEFINED_MAIL_CONFIGS = {
+    OUTLOOK: {
+        service: 'hotmail',
+        secure: false,
+        port: 587
+    },
+    ZOHOMAIL: {
+        host: 'smtp.zoho.eu',
+        secure: true,
+        port: 465
+    }
+}
+
 const generateCryptoTable = stocks => {
     let table = `
         <table border="1" style="width: 100%;">
@@ -104,8 +117,7 @@ const generateTable = (stocks, owned) => {
                         Max
                     </strong>
                 </th>
-                ${
-                    owned ? `
+                ${owned ? `
                     <th>
                         <strong>
                             Amount
@@ -147,7 +159,7 @@ const generateTable = (stocks, owned) => {
                         </strong>
                     </th>
                     ` : ''
-                }
+        }
             </tr>
         </thead>
     `;
@@ -195,8 +207,7 @@ const generateTable = (stocks, owned) => {
             <td bgcolor="${getColor(data.allTimeChange)}">
                 ${data.allTimeChange ? `${data.allTimeChange}%` : '-'}
             </td>
-            ${
-                owned ? `
+            ${owned ? `
                 <td>
                     ${data.amount} st
                 </td>
@@ -231,22 +242,20 @@ const generateTable = (stocks, owned) => {
 
 const sendMail = async mailData => {
     const transporter = nodemailer.createTransport({
-        service: 'hotmail',
-        secure: false,
-        port: 587,
+        ...PREDEFINED_MAIL_CONFIGS.ZOHOMAIL,
         auth: {
-            user: process.env.MAIL_ADDRESS,
-            pass: process.env.MAIL_PASSWORD
+            user: process.env.MAIL_ADDRESS2,
+            pass: process.env.MAIL_PASSWORD2
         }
     });
-    
+
     const ownedCryptos = mailData.filter(x => x.cryptoCoin);
     const ownedStocks = mailData.filter(x => x.ownsStock);
     const nonOwnedStocks = mailData.filter(x => !x.ownsStock && !x.cryptoCoin);
-    
+
     let descriptionOfOwnedStocks;
     let descriptionOfNonOwnedStocks;
-    
+
     if (process.env.CHATGPT_KEY) {
         console.log('Ask Open-AI to summarize the current situation ...');
         if (ownedStocks && ownedStocks.length > 0) {
@@ -259,13 +268,13 @@ const sendMail = async mailData => {
         console.warn('No chatgpt token found, cannot formulate description using open AI');
     }
 
-    const ownedCryptosTotalWorth = ownedCryptos.reduce((t,c) => {
+    const ownedCryptosTotalWorth = ownedCryptos.reduce((t, c) => {
         if (c.currentTotalValue) {
             t += Number(c.currentTotalValue);
         }
         return t;
     }, 0);
-    const ownedStocksTotalWorth = ownedStocks.reduce((t,c) => {
+    const ownedStocksTotalWorth = ownedStocks.reduce((t, c) => {
         if (c.currency === 'SEK' && c.totalCurrentWorth) {
             t += Number(c.totalCurrentWorth);
         } else if (c.totalCurrentWorthInSEK) {
@@ -273,7 +282,7 @@ const sendMail = async mailData => {
         }
         return t;
     }, 0);
-    
+
     const html = `
         <div>
             <div>
@@ -298,7 +307,7 @@ const sendMail = async mailData => {
             <div>
                 <h3>Avanza items you own</h3>
             </div>
-            ${ descriptionOfOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfOwnedStocks}</div>` : '' }
+            ${descriptionOfOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfOwnedStocks}</div>` : ''}
             <div>
                 ${generateTable(ownedStocks, true)}
             </div>
@@ -308,13 +317,13 @@ const sendMail = async mailData => {
             <div style="margin-top: 25px;">
                 <h3>Avanza items you do not own but are currently monitoring</h3>
             </div>
-            ${ descriptionOfNonOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfNonOwnedStocks}</div>` : '' }
+            ${descriptionOfNonOwnedStocks ? `<div style="margin-bottom: 25px;">${descriptionOfNonOwnedStocks}</div>` : ''}
             <div>
                 ${generateTable(nonOwnedStocks, false)}
             </div>
         </div>
     `;
-    
+
     const date = new Date();
     let month = date.getMonth() >= 10 ? date.getMonth() : `0${date.getMonth()}`;
     let day = date.getDate() >= 10 ? date.getDate() : `0${date.getDate()}`;
@@ -323,14 +332,14 @@ const sendMail = async mailData => {
     let minutes = date.getMinutes() >= 10 ? date.getMinutes() : `0${date.getMinutes()}`;
     let seconds = date.getSeconds() >= 10 ? date.getSeconds() : `0${date.getSeconds()}`;
     const dateAndTimestamp = `${month}-${day}-${year} ${hours}:${minutes}:${seconds}`;
-    
+
     const mailOptions = {
-        from: process.env.MAIL_ADDRESS,
+        from: process.env.MAIL_ADDRESS2,
         to: process.env.MAIL_ADDRESS_TO,
         subject: `💰 Stock report ${dateAndTimestamp}`,
         html
     };
-    
+
     transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
             console.log(error);
