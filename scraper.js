@@ -20,15 +20,22 @@ const getHistory = async stock => {
 }
 
 const lookUpCurrency = async (page, currency) => {
-  await page.goto(`https://www.google.com/search?q=1+${currency}+to+sek`, {
+  /* await page.goto(`https://www.google.com/search?q=1+${currency}+to+sek`, {
+    timeout: 20000,
+    waitUntil: "networkidle2",
+  }); */
+  await page.goto(`https://www.bing.com/search?q=1+${currency}+to+sek`, {
     timeout: 20000,
     waitUntil: "networkidle2",
   });
   await delay(process.env.NODE_ENV === 'production' ? 2000 : 500);
-  await page.waitForSelector("#result-stats");
-  const elements = await page.$$("div[data-name] input[aria-label]");
-  if (elements && elements[1]) {
-    let currentValue = await elements[1].evaluate(x => x.value);
+  //await page.waitForSelector("#result-stats");
+  await page.waitForSelector("#cc_container");
+  const elements = await page.$$("input[type=text]");
+  //const elements = await page.$$("#cc_tdv");
+  if (elements && elements[6]) {
+    let currentValue = await elements[6].evaluate(x => x.value);
+    currentValue = currentValue.replace(',', '.').trim();
     currentValue = Number(currentValue);
     if (currentValue) {
       currencies[currency] = currentValue;
@@ -77,7 +84,8 @@ const startScraping = async (userSettings = null) => {
     await lookUpCurrency(page, 'EUR');
     await lookUpCurrency(page, 'CAD');
     await lookUpCurrency(page, 'DKK');
-    console.log(currencies);
+    console.log('Currencies');
+    console.log(JSON.stringify(currencies, null, 4));
 
     if (userSettings.readKrakenBalance) {
       const currentBtcPrice = Number((await kraken.api('Ticker', { pair: 'XXBTZEUR' })).result.XXBTZEUR.c[0]);
@@ -222,15 +230,19 @@ const startScraping = async (userSettings = null) => {
           if (currencies[item.currency]) {
             item.totalCurrentWorthInSEK = round(item.totalCurrentWorth * currencies[item.currency]);
           } else {
-            await page.goto(`https://www.google.se/search?q=${item.totalCurrentWorth}+${currency}+to+SEK`, {
+            await page.goto(`https://www.bing.com/search?q=${item.totalCurrentWorth}+${currency}+to+SEK`, {
               timeout: 20000,
               waitUntil: "networkidle2",
             });
             await delay(process.env.NODE_ENV === 'production' ? 2000 : 500);
-            await page.waitForSelector("#result-stats");
-            const elements = await page.$$("div[data-name] input[aria-label]");
-            if (elements && elements[1]) {
-              let currentValue = await elements[1].evaluate(x => x.value);
+            //await page.waitForSelector("#result-stats");
+            await page.waitForSelector("#cc_container");
+            await page.waitForSelector("#cc_container");
+            //await page.waitForSelector("input[aria-label='Destination currency value']");
+            const elements = await page.$$("input[type=text]");
+            if (elements && elements[6]) {
+              let currentValue = await elements[6].evaluate(x => x.value);
+              currentValue = currentValue.replace(',', '.').trim();
               currentValue = Number(currentValue);
               if (currentValue) {
                 item.totalCurrentWorthInSEK = currentValue;
